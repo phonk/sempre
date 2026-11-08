@@ -4,6 +4,8 @@ An Indian tambura in your browser: a drone to play, sing or improvise over.
 
 **[Open sempre](https://phonk.github.io/sempre/)**
 
+<img src="screenshot.png" alt="sempre playing: the four strings drawn as vibrating rings, with the tala dial around them" width="360">
+
 - Four strings plucked in the traditional cycle, with the buzzing jawari bridge, synthesized live (no audio samples).
 - Tonic, register, reference pitch, fine tuning for each string and sympathetic resonance.
 - Raga presets and the seven Western modes that set the first string and show the scale; tap any note to hear it over the drone.
