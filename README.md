@@ -5,7 +5,7 @@ An Indian tambura in your browser: a drone to play, sing or improvise over.
 **[Open sempre](https://phonk.github.io/sempre/)**
 
 - Four strings plucked in the traditional cycle, with the buzzing jawari bridge, synthesized live (no audio samples).
-- Tonic, register, reference pitch and fine tuning for each string.
+- Tonic, register, reference pitch, fine tuning for each string and sympathetic resonance.
 - Raga presets and Western modes (dorian, phrygian, lydian and more) that set the first string and show the scale.
 - Tala with synthesized tabla or manjira: Teentaal, Keherwa, Dadra, Rupak, Jhaptaal.
 - Shruti box with a breathing bellows.

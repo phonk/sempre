@@ -159,6 +159,8 @@ details .inner h3{font-weight:400;font-size:.85rem;color:var(--mute);margin:8px 
       <div class="opts" id="first"></div>
       <div class="field"><div class="lbl">cycle <b id="vCycle"></b></div><input type="range" id="cycle" min="2.4" max="9" step="0.1"></div>
       <div class="field"><div class="lbl">variation <b id="vVari"></b></div><input type="range" id="vari" min="0" max="100" step="1"></div>
+      <div class="field"><div class="lbl">resonance <b id="vRes"></b></div><input type="range" id="res" min="0" max="100" step="1"></div>
+      <p class="hint">Sympathetic resonance: hidden strings tuned to sa and the first string ring along with every pluck, like the extra strings of a sitar.</p>
       <h3>tuning</h3>
       <div class="tune" id="tune"></div>
       <div class="row"><button id="tuneHuman">make it imperfect</button><button id="tuneZero">reset</button><button id="once">pluck one cycle</button></div>
@@ -235,7 +237,7 @@ const RAGAS=[
   {n:"free",f:-1,s:null,i:"No scale: choose the first string yourself."}
 ];
 ["evening","dawn","morning","night","evening","night","late night","sunset","evening","morning","night","no scale"].forEach((t,i)=>RAGAS[i].t=t);
-const S={key:4,oct:0,first:0,cycle:4.4,jaw:65,sus:8,rev:30,a4:440,vol:75,bg:0,raga:-1,shr:0,shrm:1,vari:50,tune:[0,0,0,0],tmin:0,tala:0,tsnd:0,bpm:80,tvol:60};
+const S={key:4,oct:0,first:0,cycle:4.4,jaw:65,sus:8,rev:30,a4:440,vol:75,bg:0,raga:-1,shr:0,shrm:1,vari:50,res:35,tune:[0,0,0,0],tmin:0,tala:0,tsnd:0,bpm:80,tvol:60};
 try{Object.assign(S,JSON.parse(localStorage.getItem("tambura")||"{}"))}catch(e){}
 if(!Array.isArray(S.tune)||S.tune.length!==4)S.tune=[0,0,0,0];
 const save=()=>{try{localStorage.setItem("tambura",JSON.stringify(S))}catch(e){}};
@@ -256,8 +258,8 @@ mkSeg($("tala"),TALAS,t=>t?`${t.n}<small>${t.b.split(" ").length}</small>`:"off"
 mkSeg($("tsnd"),TSND,m=>`${m.n}<small>${m.d}</small>`,i=>S.tsnd=i,true);
 mkSeg($("timer"),TIMER,m=>m?m+"′":"off",i=>{S.tmin=TIMER[i];armTimer()},true);
 
-const sliders={cycle:v=>v.toFixed(1)+" s",jaw:v=>v+"%",sus:v=>v+" s",vari:v=>v+"%",rev:v=>v+"%",a4:v=>v+" Hz",vol:v=>v+"%",shr:v=>v?v+"%":"off",bpm:v=>v+" bpm",tvol:v=>v+"%"};
-const vId={cycle:"vCycle",jaw:"vJaw",sus:"vSus",vari:"vVari",rev:"vRev",a4:"vA4",vol:"vVol",shr:"vShr",bpm:"vBpm",tvol:"vTvol"};
+const sliders={cycle:v=>v.toFixed(1)+" s",jaw:v=>v+"%",sus:v=>v+" s",vari:v=>v+"%",rev:v=>v+"%",a4:v=>v+" Hz",vol:v=>v+"%",shr:v=>v?v+"%":"off",bpm:v=>v+" bpm",tvol:v=>v+"%",res:v=>v?v+"%":"off"};
+const vId={cycle:"vCycle",jaw:"vJaw",sus:"vSus",vari:"vVari",rev:"vRev",a4:"vA4",vol:"vVol",shr:"vShr",bpm:"vBpm",tvol:"vTvol",res:"vRes"};
 for(const k in sliders){const el=$(k);el.value=S[k];
   el.oninput=()=>{S[k]=+el.value;sync();
     if(k==="tvol"){talaLevel();return}if(k==="bpm"){if(playing&&S.tala){const now=ctx.currentTime;for(let i=sched.length-1;i>=0;i--){const e=sched[i];if(e.tb!==undefined&&e.t>now+0.03){try{e.src.stop()}catch(x){}sched.splice(i,1);{const bt=e.bt??e.t;if(bt<nextBeat){nextBeat=bt;beatIdx=e.tb}}}}for(let i=tVisQ.length-1;i>=0;i--)if(tVisQ[i].t>now+0.03)tVisQ.splice(i,1)}return}
@@ -368,7 +370,30 @@ function makeShruti(c,g,t0,t1,bellowsHz){
   return {level,notes,all};
 }
 const shrLevel=()=>Math.pow(S.shr/100,1.5)*0.16;
+// ---------- sympathetic resonance: a bank of tuned feedback delays fed only by the strings ----------
+let RES=null;
+function makeRes(){
+  const inp=ctx.createGain(),out=ctx.createGain(),hp=ctx.createBiquadFilter();hp.type="highpass";hp.frequency.value=70;
+  inp.connect(hp);out.connect(G.dry);out.connect(G.wet);
+  const lines=[];
+  for(let k=0;k<6;k++){
+    const d=ctx.createDelay(1),lp=ctx.createBiquadFilter(),fb=ctx.createGain(),ig=ctx.createGain();
+    lp.type="lowpass";lp.frequency.value=2600;lp.Q.value=0.3;ig.gain.value=0.12;
+    hp.connect(ig);ig.connect(d);d.connect(lp);lp.connect(fb);fb.connect(d);lp.connect(out);
+    lines.push({d,fb,lp});
+  }
+  RES={inp,out,lines};resUpdate(true);
+}
+function resUpdate(now){
+  if(!RES)return;const b=baseFreqs(),sa=b[1],fs=[sa,sa*1.0015,b[0],sa*2,b[0]*2,sa/2];
+  const r=S.res/100,T60=0.4+7.5*r*r,t=ctx.currentTime;
+  RES.lines.forEach((L,k)=>{const f=fs[k];let n=1;while(n/f<0.003)n++;const dt=n/f;
+    const fb=Math.pow(10,-3*dt/T60)*0.995;
+    if(now){L.d.delayTime.value=dt;L.fb.gain.value=r?fb:0}else{L.d.delayTime.setTargetAtTime(dt,t,0.02);L.fb.gain.setTargetAtTime(r?fb:0,t,0.05)}});
+  const lvl=r?0.35+0.9*r:0;if(now)RES.out.gain.value=lvl;else RES.out.gain.setTargetAtTime(lvl,t,0.05);
+}
 function liveUpdate(){
+  resUpdate();
   if(!G)return;levels(G,ctx);if(playing)applyMaster();
   if(playing){
     if(S.shr>0&&!SH){SH=makeShruti(ctx,G,ctx.currentTime,0,0.21)}
@@ -377,7 +402,7 @@ function liveUpdate(){
   }
 }
 
-function initAudio(){if(ctx)return;ctx=new (window.AudioContext||window.webkitAudioContext)();G=graph(ctx);levels(G,ctx,true);
+function initAudio(){if(ctx)return;ctx=new (window.AudioContext||window.webkitAudioContext)();G=graph(ctx);levels(G,ctx,true);makeRes();
   tBus=ctx.createGain();tWet=ctx.createGain();tWet.gain.value=0.35;tBus.connect(G.dry);tBus.connect(tWet);tWet.connect(G.wet);tBus.gain.value=Math.pow(S.tvol/100,1.6)*1.1;build()}
 function build(){
   if(!ctx)return;const sr=ctx.sampleRate,f=freqs(),j=S.jaw/100,level=[0.95,0.8,0.8,1];
@@ -493,6 +518,7 @@ function pluck(c,g,b,i,t,show,J,cyc){
   const gn=c.createGain();gn.gain.value=1-Math.random()*(0.1+0.3*J);
   const p=c.createStereoPanner?c.createStereoPanner():null;
   src.connect(gn);if(p){p.pan.value=PAN[i]+(Math.random()-0.5)*0.1*J;gn.connect(p);p.connect(g.dry);p.connect(g.wet)}else{gn.connect(g.dry);gn.connect(g.wet)}
+  if(RES&&c===ctx)gn.connect(RES.inp);
   src.start(t);if(show){visQ.push({i,t});sched.push({src,t,c:cyc})}
 }
 function cycleAt(c,g,b,t,show,dur){const J=S.vari/100,cy=dur||S.cycle,times=[];
