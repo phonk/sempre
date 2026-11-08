@@ -165,6 +165,7 @@ details .inner h3{font-weight:400;font-size:.85rem;color:var(--mute);margin:8px 
       <div class="opts" id="first"></div>
       <div class="field"><div class="lbl">cycle <b id="vCycle"></b></div><input type="range" id="cycle" min="2.4" max="9" step="0.1"></div>
       <div class="field"><div class="lbl">variation <b id="vVari"></b></div><input type="range" id="vari" min="0" max="100" step="1"></div>
+      <div class="field"><div class="lbl">softness <b id="vSoft"></b></div><input type="range" id="soft" min="0" max="100" step="1"></div>
       <div class="field"><div class="lbl">resonance <b id="vRes"></b></div><input type="range" id="res" min="0" max="100" step="1"></div>
       <p class="hint">Sympathetic resonance: hidden strings tuned to sa and the first string ring along with every pluck, like the extra strings of a sitar.</p>
       <h3>tuning</h3>
@@ -262,7 +263,7 @@ const RAGAS=[
   {n:"free",f:-1,s:null,i:"No scale: choose the first string yourself."}
 ];
 ["evening","dawn","morning","night","evening","night","late night","sunset","evening","morning","night","no scale"].forEach((t,i)=>RAGAS[i].t=t);
-const S={key:4,oct:0,first:0,cycle:4.4,jaw:65,sus:8,rev:30,a4:440,vol:75,bg:0,raga:-1,shr:0,shrm:1,vari:50,res:35,sclist:0,tune:[0,0,0,0],tmin:0,tala:0,tsnd:0,bpm:80,tvol:60};
+const S={key:4,oct:0,first:0,cycle:4.4,jaw:65,sus:8,rev:30,a4:440,vol:75,bg:0,raga:-1,shr:0,shrm:1,vari:50,res:35,soft:20,sclist:0,tune:[0,0,0,0],tmin:0,tala:0,tsnd:0,bpm:80,tvol:60};
 try{Object.assign(S,JSON.parse(localStorage.getItem("tambura")||"{}"))}catch(e){}
 if(!Array.isArray(S.tune)||S.tune.length!==4)S.tune=[0,0,0,0];
 const save=()=>{try{localStorage.setItem("tambura",JSON.stringify(S))}catch(e){}};
@@ -284,12 +285,12 @@ mkSeg($("tala"),TALAS,t=>t?`${t.n}<small>${t.b.split(" ").length}</small>`:"off"
 mkSeg($("tsnd"),TSND,m=>`${m.n}<small>${m.d}</small>`,i=>S.tsnd=i,true);
 mkSeg($("timer"),TIMER,m=>m?m+"′":"off",i=>{S.tmin=TIMER[i];armTimer()},true);
 
-const sliders={cycle:v=>v.toFixed(1)+" s",jaw:v=>v+"%",sus:v=>v+" s",vari:v=>v+"%",rev:v=>v+"%",a4:v=>v+" Hz",vol:v=>v+"%",shr:v=>v?v+"%":"off",bpm:v=>v+" bpm",tvol:v=>v+"%",res:v=>v?v+"%":"off"};
-const vId={cycle:"vCycle",jaw:"vJaw",sus:"vSus",vari:"vVari",rev:"vRev",a4:"vA4",vol:"vVol",shr:"vShr",bpm:"vBpm",tvol:"vTvol",res:"vRes"};
+const sliders={cycle:v=>v.toFixed(1)+" s",jaw:v=>v+"%",sus:v=>v+" s",vari:v=>v+"%",rev:v=>v+"%",a4:v=>v+" Hz",vol:v=>v+"%",shr:v=>v?v+"%":"off",bpm:v=>v+" bpm",tvol:v=>v+"%",res:v=>v?v+"%":"off",soft:v=>v<15?"hard":v<60?v+"%":v+"%, bowed"};
+const vId={cycle:"vCycle",jaw:"vJaw",sus:"vSus",vari:"vVari",rev:"vRev",a4:"vA4",vol:"vVol",shr:"vShr",bpm:"vBpm",tvol:"vTvol",res:"vRes",soft:"vSoft"};
 for(const k in sliders){const el=$(k);el.value=S[k];
   el.oninput=()=>{S[k]=+el.value;sync();
     if(k==="tvol"){talaLevel();return}if(k==="bpm"){if(playing&&S.tala){const now=ctx.currentTime;for(let i=sched.length-1;i>=0;i--){const e=sched[i];if(e.tb!==undefined&&e.t>now+0.03){try{e.src.stop()}catch(x){}sched.splice(i,1);{const bt=e.bt??e.t;if(bt<nextBeat){nextBeat=bt;beatIdx=e.tb}}}}for(let i=tVisQ.length-1;i>=0;i--)if(tVisQ[i].t>now+0.03)tVisQ.splice(i,1)}return}
-    if(k==="jaw"||k==="sus"||k==="a4")rebuild();
+    if(k==="jaw"||k==="sus"||k==="a4"||k==="soft")rebuild();
     else liveUpdate()}}
 
 const tuneLab=()=>[FIRST[S.first].k,"sa","sa","low sa"];
@@ -332,7 +333,7 @@ function renderString(f,sr,T60,jaw,seed,vr){
   const s=0.18;
   const N=sr/f,Ni=Math.floor(N-s-0.1),frac=N-s-Ni,C=(1-frac)/(1+frac);
   const buf=new Float32Array(Ni);let r=(seed*7919+13)%233280;const rnd=()=>{r=(r*9301+49297)%233280;return r/233280*2-1};
-  let lp=0,m=0;const bright=0.5+0.2*vr;for(let i=0;i<Ni;i++){lp+=bright*(rnd()-lp);buf[i]=lp;m+=lp}m/=Ni;
+  const soft=(S.soft||0)/100;let lp=0,m=0;const bright=(0.5+0.2*vr)*(1-0.82*soft);for(let i=0;i<Ni;i++){lp+=bright*(rnd()-lp);buf[i]=lp;m+=lp}m/=Ni;
   const pp=Math.max(1,Math.floor(Ni*(0.1+0.05*vr)));const tmp=buf.slice();for(let i=0;i<Ni;i++)buf[i]=tmp[i]-m-0.6*(tmp[(i+pp)%Ni]-m);
   let pk=0;for(let i=0;i<Ni;i++)pk=Math.max(pk,Math.abs(buf[i]));for(let i=0;i<Ni;i++)buf[i]/=pk;
   const g=Math.pow(0.001,1/(f*T60));
@@ -356,8 +357,8 @@ function renderString(f,sr,T60,jaw,seed,vr){
     }
     const wj=jaw*2.4,wd=1-0.35*jaw;for(let i=0;i<len;i++)out[i]=out[i]*wd+res[i]*wj;
   }
-  const at=Math.floor(sr*0.004),ft=Math.floor(sr*0.6);
-  for(let i=0;i<at;i++)out[i]*=i/at;for(let i=0;i<ft;i++)out[len-1-i]*=i/ft;
+  const at=Math.floor(sr*(0.004+0.16*soft*soft)),ft=Math.floor(sr*0.6);
+  for(let i=0;i<at;i++){const u=i/at;out[i]*=u*u*(3-2*u)}for(let i=0;i<ft;i++)out[len-1-i]*=i/ft;
   let mx=0;for(let i=0;i<len;i+=7)mx=Math.max(mx,Math.abs(out[i]));const n=0.8/(mx||1);for(let i=0;i<len;i++)out[i]*=n;
   return out;
 }
@@ -538,7 +539,7 @@ function drawBeats(){
 // ---------- guide note: tap a scale degree to hear it over the drone ----------
 const guideCache={};
 function guideBuf(x){
-  const f=saFreq()*Math.pow(2,x/12),key=f.toFixed(2)+"/"+S.jaw;
+  const f=saFreq()*Math.pow(2,x/12),key=f.toFixed(2)+"/"+S.jaw+"/"+S.soft;
   if(!guideCache[key]){const d=renderString(f,ctx.sampleRate,3.5,S.jaw/100*0.5,x*31+7,0.5);guideCache[key]=toBuf(ctx,d)}
   return guideCache[key];
 }
