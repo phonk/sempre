@@ -52,6 +52,11 @@ h2{font-weight:400;font-size:.95rem;color:var(--mute);margin:0}
 #keys{gap:6px 14px}
 #sclist{margin-bottom:-4px}
 #keys button{text-transform:none}
+.modemap{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.modemap svg{width:150px;height:150px;flex:none}
+.modemap .mt{flex:1;min-width:180px;display:flex;flex-direction:column;gap:6px;font-size:.92rem}
+.modemap .mt b{font-weight:400;color:var(--wine)}
+.modemap .mt span{color:var(--mute);font-size:.86rem}
 .hint{font-size:.88rem;color:var(--mute);margin:0;max-width:56ch}
 
 .scale{display:flex;flex-wrap:wrap;gap:4px 14px;min-height:1.5em}
@@ -132,6 +137,7 @@ details .inner h3{font-weight:400;font-size:.85rem;color:var(--mute);margin:8px 
     <div class="opts" id="ragas"></div>
     <div class="opts" id="modes"></div>
     <div class="scale" id="scale" aria-label="Tap a note to hear it over the drone"></div>
+    <div class="modemap" id="modemap" hidden></div>
     <p class="hint" id="ragaInfo"></p>
   </section>
 
@@ -209,6 +215,25 @@ const MODES=[
 ];
 const DEG=(x,sc)=>x===6&&!sc.includes(7)?"♭5":["1","♭2","2","♭3","3","4","♯4","5","♭6","6","♭7","7"][x];
 const curScale=()=>S.raga>=100?MODES[S.raga-100]||null:S.raga>=0?RAGAS[S.raga]||null:null;
+function modeMap(){
+  const el=$("modemap"),j=S.raga-100;
+  if(!(S.raga>=100&&j<7)){el.hidden=true;el.innerHTML="";return}
+  const OFF=[0,2,4,5,7,9,11],ORD=["1st","2nd","3rd","4th","5th","6th","7th"],NAMES=MODES.slice(0,7).map(m=>m.n);
+  const root=(S.key-OFF[j]+12)%12,sc=MODES[j].s,cx=75,cy=75,R=52;
+  const pos=x=>{const a=-Math.PI/2+x/12*Math.PI*2;return [cx+Math.cos(a)*R,cy+Math.sin(a)*R]};
+  const lab=x=>{const a=-Math.PI/2+x/12*Math.PI*2;return [cx+Math.cos(a)*(R+15),cy+Math.sin(a)*(R+15)+3.5]};
+  const poly=sc.map(x=>pos(x).map(v=>v.toFixed(1)).join(",")).join(" ");
+  const rx=(root-S.key+12)%12;
+  let g=`<svg viewBox="0 0 150 150" aria-hidden="true"><polygon points="${poly}" fill="none" stroke="var(--line)" stroke-width="1"/>`;
+  for(let x=0;x<12;x++){const [px,py]=pos(x),[lx,ly]=lab(x),inS=sc.includes(x),sa=x===0,pr=x===rx;
+    g+=`<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="${sa?5:inS?3.4:1.6}" fill="${sa?"var(--amber)":inS?"var(--ink)":"var(--line)"}"/>`;
+    if(pr)g+=`<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="8" fill="none" stroke="var(--wine)" stroke-width="1.2"/>`;
+    if(inS)g+=`<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-size="9.5" fill="${sa?"var(--amber)":pr?"var(--wine)":"var(--mute)"}" font-family="inherit">${IT[(S.key+x)%12]}</text>`}
+  g+="</svg>";
+  const others=OFF.map((o,k)=>k===j?null:`${IT[(root+o)%12]} ${NAMES[k]}`).filter(Boolean).join(", ");
+  el.innerHTML=g+`<div class="mt"><div>${IT[S.key]} ${NAMES[j]} uses the notes of <b>${IT[root]} major</b>${j?`, starting from its ${ORD[j]} degree`:""}.</div><span>Same notes, other tonics: ${others}.</span></div>`;
+  el.hidden=false;
+}
 const DV=["सा","रे॒","रे","ग॒","ग","म","म॑","प","ध॒","ध","नि॒","नि"];
 const SG=["Sa","re","Re","ga","Ga","ma","Ma′","Pa","dha","Dha","ni","Ni"];
 const FIRST=[{k:"pa",r:3/4,d:"fifth"},{k:"ma",r:2/3,d:"fourth"},{k:"ni",r:15/16,d:"seventh"},{k:"sa",r:1/2,d:"octave"}];
@@ -292,7 +317,7 @@ function sync(){
   $("nowB").textContent=(curScale()?curScale().n:FIRST[S.first].k+" and sa")+(T?", "+T.n+" at "+S.bpm:"");
   timerLabel();fills();
   [0,1,2,3].forEach(i=>{$("tl"+i).textContent=`${i+1}  ${lab[i].toLowerCase()}`;$("tv"+i).textContent=fmtC(S.tune[i])});
-  const R=curScale(),W=S.raga>=100;
+  modeMap();const R=curScale(),W=S.raga>=100;
   if(R){$("scale").innerHTML=R.s.map(x=>`<button data-x="${x}" class="${x?"":"sa"}"><span class="dv">${DV[x]}</span><span class="lt">${W?DEG(x,R.s):SG[x]}</span><span class="it">${IT[(S.key+x)%12]}</span></button>`).join("");
     $("ragaInfo").textContent=R.i+" Tap a note to hear it over the drone."+(FIRST[R.f].k!==FIRST[S.first].k?(W?" (You changed the first string from the default for this scale.)":" (You changed the first string from the raga’s default.)"):"")}
   else{$("scale").innerHTML="";$("ragaInfo").textContent="No scale: choose the first string yourself."}
