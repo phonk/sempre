@@ -6,7 +6,7 @@ An Indian tambura in your browser: a drone to play, sing or improvise over.
 
 - Four strings plucked in the traditional cycle, with the buzzing jawari bridge, synthesized live (no audio samples).
 - Tonic, register, reference pitch, fine tuning for each string and sympathetic resonance.
-- Raga presets and Western modes (dorian, phrygian, lydian and more) that set the first string and show the scale; tap any note to hear it over the drone.
+- Raga presets and the seven Western modes that set the first string and show the scale; tap any note to hear it over the drone.
 - Tala with synthesized tabla or manjira: Teentaal, Keherwa, Dadra, Rupak, Jhaptaal.
 - Shruti box with a breathing bellows.
 - Sleep timer with a fade-out.

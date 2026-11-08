@@ -207,12 +207,7 @@ const MODES=[
   {n:"lydian",f:0,s:[0,2,4,6,7,9,11],i:"Major with a raised 4th. Floating and luminous. The notes of Yaman."},
   {n:"mixolydian",f:0,s:[0,2,4,5,7,9,10],i:"Major with a flat 7th. Bluesy, rock, folk. Khamaj thaat."},
   {n:"aeolian",f:0,s:[0,2,3,5,7,8,10],i:"The natural minor. Sad and grounded. Asavari thaat."},
-  {n:"locrian",f:1,s:[0,1,3,5,6,8,10],i:"Flat 2nd and flat 5th. Unstable and tense: no fifth, so the tambura goes to Ma."},
-  {n:"harmonic minor",f:0,s:[0,2,3,5,7,8,11],i:"Natural minor with a raised 7th. Dramatic, with the wide step between 6th and 7th."},
-  {n:"melodic minor",f:0,s:[0,2,3,5,7,9,11],i:"Minor below, major above. The jazz minor."},
-  {n:"major pentatonic",f:0,s:[0,2,4,7,9],i:"Five notes, no half steps. Hard to play a wrong note. Same as Bhupali."},
-  {n:"minor pentatonic",f:0,s:[0,3,5,7,10],i:"Five notes, the backbone of blues and rock bass lines."},
-  {n:"blues",f:0,s:[0,3,5,6,7,10],i:"Minor pentatonic plus the flat 5th, the blue note."}
+  {n:"locrian",f:1,s:[0,1,3,5,6,8,10],i:"Flat 2nd and flat 5th. Unstable and tense: no fifth, so the tambura goes to Ma."}
 ];
 const DEG=(x,sc)=>x===6&&!sc.includes(7)?"♭5":["1","♭2","2","♭3","3","4","♯4","5","♭6","6","♭7","7"][x];
 const curScale=()=>S.raga>=100?MODES[S.raga-100]||null:S.raga>=0?RAGAS[S.raga]||null:null;
