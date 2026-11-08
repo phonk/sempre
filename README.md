@@ -1,22 +1,22 @@
 # sempre
 
-Una tambura indiana nel browser: un drone su cui suonare, cantare o improvvisare.
+An Indian tambura in your browser: a drone to play, sing or improvise over.
 
-**[Apri sempre](https://phonk.github.io/sempre/)**
+**[Open sempre](https://phonk.github.io/sempre/)**
 
-- Quattro corde pizzicate in ciclo, con il ronzio della jawari, sintetizzate dal vivo (nessun campione audio).
-- Tonica, registro, diapason e accordatura fine di ogni corda.
-- Preset di raga che impostano la prima corda e mostrano la scala.
-- Tala con tabla o manjira sintetizzati: Teentaal, Keherwa, Dadra, Rupak, Jhaptaal.
-- Shruti box con il mantice che respira.
-- Timer con dissolvenza.
+- Four strings plucked in the traditional cycle, with the buzzing jawari bridge, synthesized live (no audio samples).
+- Tonic, register, reference pitch and fine tuning for each string.
+- Raga presets that set the first string and show the scale.
+- Tala with synthesized tabla or manjira: Teentaal, Keherwa, Dadra, Rupak, Jhaptaal.
+- Shruti box with a breathing bellows.
+- Sleep timer with a fade-out.
 
-Tutto sta in un unico file, `index.html`, senza dipendenze.
+Everything lives in a single file, `index.html`, with no dependencies.
 
-## Schermo spento
+## Screen off
 
-Sui telefoni recenti il suono continua a schermo bloccato se apri la pagina direttamente in Safari o Chrome. Su iPhone puoi aggiungerla alla schermata Home dal menu Condividi.
+On recent phones the drone keeps playing with the screen locked when you open the page directly in Safari or Chrome. On iPhone you can add it to your Home Screen from the Share menu.
 
-## Licenza
+## License
 
 MIT

@@ -1,8 +1,9 @@
 <!doctype html>
-<html lang="it">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="A tambura drone in your browser, with tala and shruti box, to play over.">
 <meta name="theme-color" content="#02040F">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -32,13 +33,13 @@ h1{font-weight:300;font-size:1.5rem;letter-spacing:-.01em;margin:0}
 .stage{width:100%;max-width:min(100%,62vh);aspect-ratio:1;margin:0 auto;position:relative}
 .stage canvas{display:block;width:100%;height:100%;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .cap{display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:-6px;text-align:center}
-#nowA{font-weight:300;font-size:1.9rem;letter-spacing:-.02em;text-transform:lowercase}
+#nowA{font-weight:300;font-size:1.9rem;letter-spacing:-.02em}
 #nowB{color:var(--mute);font-size:.92rem;text-transform:lowercase}
 
 .strnames{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;text-align:center;font-size:.85rem}
 .strnames div{display:flex;flex-direction:column;padding:6px 0;border-radius:6px;transition:background .3s}
 .strnames .sg{color:var(--mute);text-transform:lowercase}
-.strnames .nt{text-transform:lowercase}
+.strnames .nt{}
 .strnames .hz{color:var(--mute);font-size:.75rem}
 
 section{display:flex;flex-direction:column;gap:14px;border-top:1px solid var(--line);padding-top:16px}
@@ -49,12 +50,13 @@ h2{font-weight:400;font-size:.95rem;color:var(--mute);margin:0}
 .opts button[aria-pressed="true"]{opacity:1;color:var(--amber)}
 .opts button[aria-pressed="true"]::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:var(--amber)}
 #keys{gap:6px 14px}
+#keys button{text-transform:none}
 .hint{font-size:.88rem;color:var(--mute);margin:0;max-width:56ch}
 
 .scale{display:flex;flex-wrap:wrap;gap:4px 14px;min-height:1.5em}
 .scale div{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2}
 .scale .lt{font-size:1rem}
-.scale .it{font-size:.78rem;color:var(--mute);text-transform:lowercase}
+.scale .it{font-size:.78rem;color:var(--mute)}
 .scale .dv{display:none}
 .scale .sa .lt{color:var(--amber)}
 
@@ -110,8 +112,8 @@ details .inner h3{font-weight:400;font-size:.85rem;color:var(--mute);margin:8px 
   </header>
 
   <div>
-    <div class="stage"><canvas id="cv" aria-label="Tocca per suonare o fermare la tambura"></canvas></div>
-    <div class="cap"><span id="nowA">sa mi3</span><span id="nowB"></span><span id="saNow" hidden></span></div>
+    <div class="stage"><canvas id="cv" aria-label="Tap to play or stop the drone"></canvas></div>
+    <div class="cap"><span id="nowA">sa e3</span><span id="nowB"></span><span id="saNow" hidden></span></div>
   </div>
 
   <div class="strnames" id="strNames"></div>
@@ -136,46 +138,46 @@ details .inner h3{font-weight:400;font-size:.85rem;color:var(--mute);margin:8px 
     <p class="hint" id="talaInfo"></p>
     <div class="opts" id="tsnd"></div>
     <div class="field"><div class="lbl">tempo <b id="vBpm"></b></div>
-      <div class="bpm"><button id="bpmDn" aria-label="Più lento">−</button><input type="range" id="bpm" min="30" max="240" step="1"><button id="bpmUp" aria-label="Più veloce">+</button></div></div>
+      <div class="bpm"><button id="bpmDn" aria-label="Slower">−</button><input type="range" id="bpm" min="30" max="240" step="1"><button id="bpmUp" aria-label="Faster">+</button></div></div>
     <div class="field"><div class="lbl">volume <b id="vTvol"></b></div><input type="range" id="tvol" min="0" max="100" step="1"></div>
   </section>
 
   <section>
     <h2>shruti</h2>
-    <div class="field"><div class="lbl">mantice <b id="vShr"></b></div><input type="range" id="shr" min="0" max="100" step="1"></div>
+    <div class="field"><div class="lbl">bellows <b id="vShr"></b></div><input type="range" id="shr" min="0" max="100" step="1"></div>
     <div class="opts" id="shrMode"></div>
   </section>
 
   <details>
-    <summary>corde</summary>
+    <summary>strings</summary>
     <div class="inner">
-      <h3>prima corda</h3>
+      <h3>first string</h3>
       <div class="opts" id="first"></div>
-      <div class="field"><div class="lbl">ciclo <b id="vCycle"></b></div><input type="range" id="cycle" min="2.4" max="9" step="0.1"></div>
-      <div class="field"><div class="lbl">variazione <b id="vVari"></b></div><input type="range" id="vari" min="0" max="100" step="1"></div>
-      <h3>accordatura</h3>
+      <div class="field"><div class="lbl">cycle <b id="vCycle"></b></div><input type="range" id="cycle" min="2.4" max="9" step="0.1"></div>
+      <div class="field"><div class="lbl">variation <b id="vVari"></b></div><input type="range" id="vari" min="0" max="100" step="1"></div>
+      <h3>tuning</h3>
       <div class="tune" id="tune"></div>
-      <div class="row"><button id="tuneHuman">rendila imperfetta</button><button id="tuneZero">azzera</button><button id="once">pizzica un giro</button></div>
+      <div class="row"><button id="tuneHuman">make it imperfect</button><button id="tuneZero">reset</button><button id="once">pluck one cycle</button></div>
     </div>
   </details>
 
   <details>
-    <summary>suono</summary>
+    <summary>sound</summary>
     <div class="inner">
       <div class="field"><div class="lbl">jawari <b id="vJaw"></b></div><input type="range" id="jaw" min="0" max="100" step="1"></div>
       <div class="field"><div class="lbl">sustain <b id="vSus"></b></div><input type="range" id="sus" min="3" max="14" step="0.5"></div>
-      <div class="field"><div class="lbl">riverbero <b id="vRev"></b></div><input type="range" id="rev" min="0" max="100" step="1"></div>
+      <div class="field"><div class="lbl">reverb <b id="vRev"></b></div><input type="range" id="rev" min="0" max="100" step="1"></div>
       <div class="field"><div class="lbl">volume <b id="vVol"></b></div><input type="range" id="vol" min="0" max="100" step="1"></div>
-      <h3>diapason</h3>
-      <div class="field"><div class="lbl">la4 <b id="vA4"></b></div><input type="range" id="a4" min="430" max="450" step="0.5"></div>
+      <h3>reference pitch</h3>
+      <div class="field"><div class="lbl">a4 <b id="vA4"></b></div><input type="range" id="a4" min="430" max="450" step="0.5"></div>
       <h3>timer</h3>
       <div class="opts" id="timer"></div>
-      <p class="hint">Sfuma negli ultimi 30 secondi. A schermo spento continua su Safari e Chrome dei telefoni recenti; dentro l’app di Claude potrebbe fermarsi.</p>
+      <p class="hint">Fades out over the last 30 seconds. With the screen locked it keeps playing in Safari and Chrome on recent phones; inside other apps it may stop.</p>
     </div>
   </details>
 </div>
 
-<button class="play" id="play" aria-pressed="false" aria-label="Suona">
+<button class="play" id="play" aria-pressed="false" aria-label="Play">
   <svg class="ic-play" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>
   <svg class="ic-stop" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1.5"/></svg>
 </button>
@@ -183,36 +185,36 @@ details .inner h3{font-weight:400;font-size:.85rem;color:var(--mute);margin:8px 
 
 <script>
 (()=>{
-const IT=["Do","Do♯","Re","Mi♭","Mi","Fa","Fa♯","Sol","La♭","La","Si♭","Si"];
+const IT=["C","C♯","D","E♭","E","F","F♯","G","A♭","A","B♭","B"];
 const EN=["C","C#","D","Eb","E","F","F#","G","Ab","A","Bb","B"];
 const DV=["सा","रे॒","रे","ग॒","ग","म","म॑","प","ध॒","ध","नि॒","नि"];
 const SG=["Sa","re","Re","ga","Ga","ma","Ma′","Pa","dha","Dha","ni","Ni"];
-const FIRST=[{k:"pa",r:3/4,d:"quinta"},{k:"ma",r:2/3,d:"quarta"},{k:"ni",r:15/16,d:"settima"},{k:"sa",r:1/2,d:"ottava"}];
-const OCT=[{k:-1,n:"grave"},{k:0,n:"medio"},{k:1,n:"acuto"}];
+const FIRST=[{k:"pa",r:3/4,d:"fifth"},{k:"ma",r:2/3,d:"fourth"},{k:"ni",r:15/16,d:"seventh"},{k:"sa",r:1/2,d:"octave"}];
+const OCT=[{k:-1,n:"low"},{k:0,n:"middle"},{k:1,n:"high"}];
 const TALAS=[null,
   {n:"Teentaal",v:[4,4,4,4],m:["X","2","0","3"],b:"dha dhin dhin dha dha dhin dhin dha dha tin tin ta ta dhin dhin dha"},
   {n:"Keherwa",v:[4,4],m:["X","0"],b:"dha ge na ti na ka dhi na"},
   {n:"Dadra",v:[3,3],m:["X","0"],b:"dha dhi na dha ti na"},
-  {n:"Rupak",v:[3,2,2],m:["X","2","3"],b:"tin tin na dhi na dhi na",note:"Rupak inizia sul vuoto: il sam cade su «tin», senza tamburo grave."},
+  {n:"Rupak",v:[3,2,2],m:["X","2","3"],b:"tin tin na dhi na dhi na",note:"Rupak starts on the empty section: sam falls on “tin”, with no bass drum."},
   {n:"Jhaptaal",v:[2,3,2,3],m:["X","2","0","3"],b:"dhi na dhi dhi na ti na dhi dhi na"}];
-const TSND=[{n:"tabla",d:""},{n:"manjira",d:"cimbali"}];
+const TSND=[{n:"tabla",d:""},{n:"manjira",d:"cymbals"}];
 const TIMER=[0,10,20,30,45,60];
-const SHRM=[{n:"solo sa",d:""},{n:"sa e prima corda",d:""}];
+const SHRM=[{n:"sa only",d:""},{n:"sa and first string",d:""}];
 const RAGAS=[
-  {n:"Yaman",f:2,s:[0,2,4,6,7,9,11],i:"Sera. Ma tivra, luminoso e aperto; tambura spesso su Ni."},
-  {n:"Bhairav",f:0,s:[0,1,4,5,7,8,11],i:"Alba. re e dha komal, solenne e severo."},
-  {n:"Bhairavi",f:0,s:[0,1,3,5,7,8,10],i:"Mattino o chiusura di concerto. Tutte le note komal, intimo."},
-  {n:"Malkauns",f:1,s:[0,3,5,8,10],i:"Notte. Pentatonico senza Pa: tambura su Ma."},
-  {n:"Bhupali",f:0,s:[0,2,4,7,9],i:"Sera. Pentatonica maggiore, sereno e cantabile."},
-  {n:"Kafi",f:0,s:[0,2,3,5,7,9,10],i:"Notte. ga e ni komal, popolare e caldo."},
-  {n:"Darbari",f:0,s:[0,2,3,5,7,8,10],i:"Notte fonda. Lento e grave, ga e dha con oscillazioni."},
-  {n:"Marwa",f:2,s:[0,1,4,6,9,11],i:"Tramonto. Senza Pa: tambura su Ni, tensione inquieta."},
-  {n:"Hamsadhwani",f:0,s:[0,2,4,7,11],i:"Sera. Pentatonico brillante, molto usato nel sud."},
-  {n:"Todi",f:0,s:[0,1,3,6,7,8,11],i:"Mattino. re, ga, dha komal con Ma tivra, struggente."},
-  {n:"Bageshri",f:1,s:[0,2,3,5,9,10],i:"Notte. Pa quasi assente: tambura su Ma, malinconico."},
-  {n:"Libero",f:-1,s:null,i:"Nessuna scala: scegli tu la prima corda."}
+  {n:"Yaman",f:2,s:[0,2,4,6,7,9,11],i:"Evening. Sharp Ma, bright and open; tambura often tuned to Ni."},
+  {n:"Bhairav",f:0,s:[0,1,4,5,7,8,11],i:"Dawn. Flat re and dha, solemn and austere."},
+  {n:"Bhairavi",f:0,s:[0,1,3,5,7,8,10],i:"Morning, or the close of a concert. All flat notes, intimate."},
+  {n:"Malkauns",f:1,s:[0,3,5,8,10],i:"Night. Pentatonic without Pa: tambura on Ma."},
+  {n:"Bhupali",f:0,s:[0,2,4,7,9],i:"Evening. Major pentatonic, serene and singable."},
+  {n:"Kafi",f:0,s:[0,2,3,5,7,9,10],i:"Night. Flat ga and ni, folk-like and warm."},
+  {n:"Darbari",f:0,s:[0,2,3,5,7,8,10],i:"Late night. Slow and deep, ga and dha with oscillations."},
+  {n:"Marwa",f:2,s:[0,1,4,6,9,11],i:"Sunset. No Pa: tambura on Ni, restless tension."},
+  {n:"Hamsadhwani",f:0,s:[0,2,4,7,11],i:"Evening. Bright pentatonic, much loved in the south."},
+  {n:"Todi",f:0,s:[0,1,3,6,7,8,11],i:"Morning. Flat re, ga, dha with sharp Ma, aching."},
+  {n:"Bageshri",f:1,s:[0,2,3,5,9,10],i:"Night. Pa nearly absent: tambura on Ma, melancholy."},
+  {n:"free",f:-1,s:null,i:"No scale: choose the first string yourself."}
 ];
-["Sera","Alba","Mattino","Notte","Sera","Notte","Notte fonda","Tramonto","Sera","Mattino","Notte","senza scala"].forEach((t,i)=>RAGAS[i].t=t);
+["evening","dawn","morning","night","evening","night","late night","sunset","evening","morning","night","no scale"].forEach((t,i)=>RAGAS[i].t=t);
 const S={key:4,oct:0,first:0,cycle:4.4,jaw:65,sus:8,rev:30,a4:440,vol:75,bg:0,raga:-1,shr:0,shrm:1,vari:50,tune:[0,0,0,0],tmin:0,tala:0,tsnd:0,bpm:80,tvol:60};
 try{Object.assign(S,JSON.parse(localStorage.getItem("tambura")||"{}"))}catch(e){}
 if(!Array.isArray(S.tune)||S.tune.length!==4)S.tune=[0,0,0,0];
@@ -229,11 +231,11 @@ mkSeg($("oct"),OCT,o=>o.n,i=>S.oct=OCT[i].k);
 mkSeg($("first"),FIRST,f=>`${f.k}<small>${f.d}</small>`,i=>S.first=i);
 mkSeg($("ragas"),RAGAS,r=>r.n,i=>{S.raga=i===RAGAS.length-1?-1:i;if(RAGAS[i].f>=0)S.first=RAGAS[i].f});
 mkSeg($("shrMode"),SHRM,m=>`${m.n}<small>${m.d}</small>`,i=>S.shrm=i);
-mkSeg($("tala"),TALAS,t=>t?`${t.n}<small>${t.b.split(" ").length}</small>`:"spento",i=>{S.tala=i;talaReset()},true);
+mkSeg($("tala"),TALAS,t=>t?`${t.n}<small>${t.b.split(" ").length}</small>`:"off",i=>{S.tala=i;talaReset()},true);
 mkSeg($("tsnd"),TSND,m=>`${m.n}<small>${m.d}</small>`,i=>S.tsnd=i,true);
-mkSeg($("timer"),TIMER,m=>m?m+"′":"no",i=>{S.tmin=TIMER[i];armTimer()},true);
+mkSeg($("timer"),TIMER,m=>m?m+"′":"off",i=>{S.tmin=TIMER[i];armTimer()},true);
 
-const sliders={cycle:v=>v.toFixed(1)+" s",jaw:v=>v+"%",sus:v=>v+" s",vari:v=>v+"%",rev:v=>v+"%",a4:v=>v+" Hz",vol:v=>v+"%",shr:v=>v?v+"%":"spento",bpm:v=>v+" bpm",tvol:v=>v+"%"};
+const sliders={cycle:v=>v.toFixed(1)+" s",jaw:v=>v+"%",sus:v=>v+" s",vari:v=>v+"%",rev:v=>v+"%",a4:v=>v+" Hz",vol:v=>v+"%",shr:v=>v?v+"%":"off",bpm:v=>v+" bpm",tvol:v=>v+"%"};
 const vId={cycle:"vCycle",jaw:"vJaw",sus:"vSus",vari:"vVari",rev:"vRev",a4:"vA4",vol:"vVol",shr:"vShr",bpm:"vBpm",tvol:"vTvol"};
 for(const k in sliders){const el=$(k);el.value=S[k];
   el.oninput=()=>{S[k]=+el.value;sync();
@@ -241,7 +243,7 @@ for(const k in sliders){const el=$(k);el.value=S[k];
     if(k==="jaw"||k==="sus"||k==="a4")rebuild();
     else liveUpdate()}}
 
-const tuneLab=()=>[FIRST[S.first].k,"sa","sa","sa grave"];
+const tuneLab=()=>[FIRST[S.first].k,"sa","sa","low sa"];
 $("tune").innerHTML=[0,1,2,3].map(i=>`<div class="field"><div class="lbl"><span id="tl${i}"></span><b id="tv${i}"></b></div><input type="range" id="tune${i}" min="-25" max="25" step="1"></div>`).join("");
 [0,1,2,3].forEach(i=>{const el=$("tune"+i);el.value=S.tune[i];el.oninput=()=>{S.tune[i]=+el.value;sync();rebuild()}});
 $("tuneZero").onclick=()=>{S.tune=[0,0,0,0];[0,1,2,3].forEach(i=>$("tune"+i).value=0);sync();rebuild()};
@@ -260,15 +262,15 @@ function sync(){
   press("ragas",i=>S.raga===-1?i===RAGAS.length-1:i===S.raga);
   for(const k in sliders)$(vId[k]).textContent=sliders[k](S[k]);
   const f=freqs(),lab=tuneLab();
-  $("strNames").innerHTML=f.map((x,i)=>`<div><span class="sg">${lab[i]}</span><span class="nt">${noteName(x)}</span><span class="hz">${noteEn(x)}, ${x.toFixed(1)} Hz</span></div>`).join("");
+  $("strNames").innerHTML=f.map((x,i)=>`<div><span class="sg">${lab[i]}</span><span class="nt">${noteName(x)}</span><span class="hz">${x.toFixed(1)} Hz</span></div>`).join("");
   $("saNow").textContent=IT[S.key];
   const T=TALAS[S.tala];$("nowA").textContent="sa "+noteName(saFreq());
-  $("nowB").textContent=(S.raga>=0?RAGAS[S.raga].n:FIRST[S.first].k+" e sa")+(T?", "+T.n+" a "+S.bpm:"");
+  $("nowB").textContent=(S.raga>=0?RAGAS[S.raga].n:FIRST[S.first].k+" and sa")+(T?", "+T.n+" at "+S.bpm:"");
   timerLabel();fills();
   [0,1,2,3].forEach(i=>{$("tl"+i).textContent=`${i+1}  ${lab[i].toLowerCase()}`;$("tv"+i).textContent=fmtC(S.tune[i])});
   const R=S.raga>=0?RAGAS[S.raga]:null;
   if(R){$("scale").innerHTML=R.s.map(x=>`<div class="${x?"":"sa"}"><span class="dv">${DV[x]}</span><span class="lt">${SG[x]}</span><span class="it">${IT[(S.key+x)%12]}</span></div>`).join("");
-    $("ragaInfo").textContent=R.i+(FIRST[R.f].k!==FIRST[S.first].k?" (Hai cambiato la prima corda rispetto al raga.)":"")}
+    $("ragaInfo").textContent=R.i+(FIRST[R.f].k!==FIRST[S.first].k?" (You changed the first string from the raga’s default.)":"")}
   else{$("scale").innerHTML="";$("ragaInfo").textContent=RAGAS[RAGAS.length-1].i}
   save();
 }
@@ -428,7 +430,7 @@ function drawBeats(){
   if(!T){el.innerHTML="";el.hidden=true;$("talaInfo").textContent="";return}el.hidden=false;
   const bols=T.b.split(" ");let k=0;
   el.innerHTML=T.v.map((n,vi)=>`<div class="vib${vi===0?" x":""}"><span class="mk">${T.m[vi]}</span><div class="bols">${Array.from({length:n},()=>{const i=k++;return `<span class="bol${i===curBeat?" on":""}${i===0?" sam":""}">${bols[i]}</span>`}).join("")}</div></div>`).join("");
-  $("talaInfo").textContent=`Sul quadrante il punto rosso è il sam, il battito più forte; i cerchi vuoti aprono il khali, la parte senza tamburo grave. Tabla accordata su ${noteName(dayanF()).toLowerCase()}.`+(T.note?" "+T.note:"");
+  $("talaInfo").textContent=`On the dial, the red dot is sam, the strongest beat; hollow circles open khali, the section without the bass drum. Tabla tuned to ${noteName(dayanF())}.`+(T.note?" "+T.note:"");
 }
 
 // ---------- plucking ----------
@@ -479,7 +481,7 @@ document.addEventListener("visibilitychange",()=>{
 
 async function start(){
   initAudio();playing=true;
-  $("play").setAttribute("aria-pressed","true");$("play").setAttribute("aria-label","Ferma");
+  $("play").setAttribute("aria-pressed","true");$("play").setAttribute("aria-label","Stop");
   try{if(navigator.audioSession)navigator.audioSession.type="playback"}catch(e){}
   // a silent media element keeps the audio session and lock-screen controls alive on phones
   au.src=silent;au.loop=true;au.volume=0.01;au.play().catch(()=>{});
@@ -496,7 +498,7 @@ async function start(){
 }
 function stop(){
   playing=false;clearInterval(timer);armTimer();au.pause();
-  $("play").setAttribute("aria-pressed","false");$("play").setAttribute("aria-label","Suona");
+  $("play").setAttribute("aria-pressed","false");$("play").setAttribute("aria-label","Play");
   try{navigator.mediaSession.playbackState="paused"}catch(e){}
   if(G){const t=ctx.currentTime;G.master.gain.cancelScheduledValues(t);G.master.gain.setValueAtTime(G.master.gain.value,t);G.master.gain.setTargetAtTime(0,t,0.6);
     sched.forEach(e=>{if(e.t>t+(e.tb!==undefined?0.05:2))try{e.src.stop()}catch(x){}});sched.length=0;visQ.length=0;tVisQ.length=0;curBeat=-1;drawBeats();
@@ -574,7 +576,7 @@ function draw(){
   }
   // Sa, small, at the centre
   c2.fillStyle=playing?ink:mute;c2.textAlign="center";c2.textBaseline="middle";
-  c2.font=`300 ${Math.round(U*0.05)}px ${C("--font")}`;c2.fillText(playing?"":"tocca",cx,cy);
+  c2.font=`300 ${Math.round(U*0.05)}px ${C("--font")}`;c2.fillText(playing?"":"tap",cx,cy);
   if(playing){c2.beginPath();c2.arc(cx,cy,1.6*dpr,0,7);c2.fillStyle=amber;c2.fill()}
   requestAnimationFrame(draw);
 }
