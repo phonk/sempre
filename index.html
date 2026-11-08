@@ -50,8 +50,8 @@ h2{font-weight:400;font-size:.95rem;color:var(--mute);margin:0}
 .opts button[aria-pressed="true"]{opacity:1;color:var(--amber)}
 .opts button[aria-pressed="true"]::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:var(--amber)}
 #keys{gap:6px 14px}
+#sclist{margin-bottom:-4px}
 #keys button{text-transform:none}
-.sub{font-size:.8rem;color:var(--mute);margin-bottom:-8px}
 .hint{font-size:.88rem;color:var(--mute);margin:0;max-width:56ch}
 
 .scale{display:flex;flex-wrap:wrap;gap:4px 14px;min-height:1.5em}
@@ -127,9 +127,8 @@ details .inner h3{font-weight:400;font-size:.85rem;color:var(--mute);margin:8px 
 
   <section>
     <h2>scale</h2>
-    <div class="sub">raga</div>
+    <div class="opts" id="sclist"></div>
     <div class="opts" id="ragas"></div>
-    <div class="sub">modes</div>
     <div class="opts" id="modes"></div>
     <div class="scale" id="scale"></div>
     <p class="hint" id="ragaInfo"></p>
@@ -237,7 +236,7 @@ const RAGAS=[
   {n:"free",f:-1,s:null,i:"No scale: choose the first string yourself."}
 ];
 ["evening","dawn","morning","night","evening","night","late night","sunset","evening","morning","night","no scale"].forEach((t,i)=>RAGAS[i].t=t);
-const S={key:4,oct:0,first:0,cycle:4.4,jaw:65,sus:8,rev:30,a4:440,vol:75,bg:0,raga:-1,shr:0,shrm:1,vari:50,res:35,tune:[0,0,0,0],tmin:0,tala:0,tsnd:0,bpm:80,tvol:60};
+const S={key:4,oct:0,first:0,cycle:4.4,jaw:65,sus:8,rev:30,a4:440,vol:75,bg:0,raga:-1,shr:0,shrm:1,vari:50,res:35,sclist:0,tune:[0,0,0,0],tmin:0,tala:0,tsnd:0,bpm:80,tvol:60};
 try{Object.assign(S,JSON.parse(localStorage.getItem("tambura")||"{}"))}catch(e){}
 if(!Array.isArray(S.tune)||S.tune.length!==4)S.tune=[0,0,0,0];
 const save=()=>{try{localStorage.setItem("tambura",JSON.stringify(S))}catch(e){}};
@@ -253,6 +252,7 @@ mkSeg($("oct"),OCT,o=>o.n,i=>S.oct=OCT[i].k);
 mkSeg($("first"),FIRST,f=>`${f.k}<small>${f.d}</small>`,i=>S.first=i);
 mkSeg($("ragas"),RAGAS,r=>r.n,i=>{S.raga=i===RAGAS.length-1?-1:i;if(RAGAS[i].f>=0)S.first=RAGAS[i].f});
 mkSeg($("modes"),MODES,m=>m.n,i=>{S.raga=100+i;S.first=MODES[i].f});
+mkSeg($("sclist"),[{n:"raga",d:"indian"},{n:"modes",d:"western"}],m=>`${m.n}<small>${m.d}</small>`,i=>S.sclist=i,true);
 mkSeg($("shrMode"),SHRM,m=>`${m.n}<small>${m.d}</small>`,i=>S.shrm=i);
 mkSeg($("tala"),TALAS,t=>t?`${t.n}<small>${t.b.split(" ").length}</small>`:"off",i=>{S.tala=i;talaReset()},true);
 mkSeg($("tsnd"),TSND,m=>`${m.n}<small>${m.d}</small>`,i=>S.tsnd=i,true);
@@ -282,7 +282,7 @@ function sync(){
   const press=(id,fn)=>[...$(id).children].forEach((b,i)=>b.setAttribute("aria-pressed",fn(i)));
   press("keys",i=>i===S.key);press("oct",i=>OCT[i].k===S.oct);press("first",i=>i===S.first);
   press("timer",i=>TIMER[i]===S.tmin);press("tala",i=>i===S.tala);press("tsnd",i=>i===S.tsnd);drawBeats();press("shrMode",i=>i===S.shrm);
-  press("ragas",i=>S.raga===-1?i===RAGAS.length-1:i===S.raga);press("modes",i=>S.raga===100+i);
+  press("ragas",i=>S.raga===-1?i===RAGAS.length-1:i===S.raga);press("modes",i=>S.raga===100+i);press("sclist",i=>i===S.sclist);$("ragas").hidden=S.sclist!==0;$("modes").hidden=S.sclist!==1;
   for(const k in sliders)$(vId[k]).textContent=sliders[k](S[k]);
   const f=freqs(),lab=tuneLab();
   $("strNames").innerHTML=f.map((x,i)=>`<div><span class="sg">${lab[i]}</span><span class="nt">${noteName(x)}</span><span class="hz">${x.toFixed(1)} Hz</span></div>`).join("");
@@ -378,7 +378,7 @@ function makeRes(){
   const lines=[];
   for(let k=0;k<6;k++){
     const d=ctx.createDelay(1),lp=ctx.createBiquadFilter(),fb=ctx.createGain(),ig=ctx.createGain();
-    lp.type="lowpass";lp.frequency.value=2600;lp.Q.value=0.3;ig.gain.value=0.12;
+    lp.type="lowpass";lp.frequency.value=2600;lp.Q.value=-8;ig.gain.value=0.12;
     hp.connect(ig);ig.connect(d);d.connect(lp);lp.connect(fb);fb.connect(d);lp.connect(out);
     lines.push({d,fb,lp});
   }
@@ -386,9 +386,9 @@ function makeRes(){
 }
 function resUpdate(now){
   if(!RES)return;const b=baseFreqs(),sa=b[1],fs=[sa,sa*1.0015,b[0],sa*2,b[0]*2,sa/2];
-  const r=S.res/100,T60=0.4+7.5*r*r,t=ctx.currentTime;
+  const r=S.res/100,T60=0.4+5.5*r*r,t=ctx.currentTime;
   RES.lines.forEach((L,k)=>{const f=fs[k];let n=1;while(n/f<0.003)n++;const dt=n/f;
-    const fb=Math.pow(10,-3*dt/T60)*0.995;
+    const fb=Math.min(0.985,Math.pow(10,-3*dt/T60));
     if(now){L.d.delayTime.value=dt;L.fb.gain.value=r?fb:0}else{L.d.delayTime.setTargetAtTime(dt,t,0.02);L.fb.gain.setTargetAtTime(r?fb:0,t,0.05)}});
   const lvl=r?0.35+0.9*r:0;if(now)RES.out.gain.value=lvl;else RES.out.gain.setTargetAtTime(lvl,t,0.05);
 }
