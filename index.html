@@ -55,7 +55,8 @@ h2{font-weight:400;font-size:.95rem;color:var(--mute);margin:0}
 .hint{font-size:.88rem;color:var(--mute);margin:0;max-width:56ch}
 
 .scale{display:flex;flex-wrap:wrap;gap:4px 14px;min-height:1.5em}
-.scale div{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2}
+.scale button{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;padding:4px 6px;margin:0 -6px;border-radius:6px;transition:background .5s}
+.scale button.ring{background:color-mix(in srgb, var(--amber) 22%, transparent);transition:none}
 .scale .lt{font-size:1rem}
 .scale .it{font-size:.78rem;color:var(--mute)}
 .scale .dv{display:none}
@@ -130,7 +131,7 @@ details .inner h3{font-weight:400;font-size:.85rem;color:var(--mute);margin:8px 
     <div class="opts" id="sclist"></div>
     <div class="opts" id="ragas"></div>
     <div class="opts" id="modes"></div>
-    <div class="scale" id="scale"></div>
+    <div class="scale" id="scale" aria-label="Tap a note to hear it over the drone"></div>
     <p class="hint" id="ragaInfo"></p>
   </section>
 
@@ -292,8 +293,8 @@ function sync(){
   timerLabel();fills();
   [0,1,2,3].forEach(i=>{$("tl"+i).textContent=`${i+1}  ${lab[i].toLowerCase()}`;$("tv"+i).textContent=fmtC(S.tune[i])});
   const R=curScale(),W=S.raga>=100;
-  if(R){$("scale").innerHTML=R.s.map(x=>`<div class="${x?"":"sa"}"><span class="dv">${DV[x]}</span><span class="lt">${W?DEG(x,R.s):SG[x]}</span><span class="it">${IT[(S.key+x)%12]}</span></div>`).join("");
-    $("ragaInfo").textContent=R.i+(FIRST[R.f].k!==FIRST[S.first].k?(W?" (You changed the first string from the default for this scale.)":" (You changed the first string from the raga’s default.)"):"")}
+  if(R){$("scale").innerHTML=R.s.map(x=>`<button data-x="${x}" class="${x?"":"sa"}"><span class="dv">${DV[x]}</span><span class="lt">${W?DEG(x,R.s):SG[x]}</span><span class="it">${IT[(S.key+x)%12]}</span></button>`).join("");
+    $("ragaInfo").textContent=R.i+" Tap a note to hear it over the drone."+(FIRST[R.f].k!==FIRST[S.first].k?(W?" (You changed the first string from the default for this scale.)":" (You changed the first string from the raga’s default.)"):"")}
   else{$("scale").innerHTML="";$("ragaInfo").textContent="No scale: choose the first string yourself."}
   save();
 }
@@ -509,6 +510,21 @@ function drawBeats(){
   $("talaInfo").textContent=`On the dial, the red dot is sam, the strongest beat; hollow circles open khali, the section without the bass drum. Tabla tuned to ${noteName(dayanF())}.`+(T.note?" "+T.note:"");
 }
 
+// ---------- guide note: tap a scale degree to hear it over the drone ----------
+const guideCache={};
+function guideBuf(x){
+  const f=saFreq()*Math.pow(2,x/12),key=f.toFixed(2)+"/"+S.jaw;
+  if(!guideCache[key]){const d=renderString(f,ctx.sampleRate,3.5,S.jaw/100*0.5,x*31+7,0.5);guideCache[key]=toBuf(ctx,d)}
+  return guideCache[key];
+}
+$("scale").addEventListener("click",async e=>{
+  const b=e.target.closest("button[data-x]");if(!b)return;
+  initAudio();if(ctx.state!=="running")await ctx.resume();if(!playing)levels(G,ctx);
+  const src=ctx.createBufferSource();src.buffer=guideBuf(+b.dataset.x);
+  const g=ctx.createGain();g.gain.value=0.75;src.connect(g);g.connect(G.dry);g.connect(G.wet);if(RES)g.connect(RES.inp);
+  src.start(ctx.currentTime+0.01);
+  b.classList.add("ring");setTimeout(()=>b.classList.remove("ring"),120);
+});
 // ---------- plucking ----------
 const PAN=[-0.25,-0.05,0.08,0.25],OFF=[0,0.32,0.5,0.68];
 const vis=[0,0,0,0];const visQ=[];
