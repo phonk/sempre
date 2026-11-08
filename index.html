@@ -51,6 +51,7 @@ h2{font-weight:400;font-size:.95rem;color:var(--mute);margin:0}
 .opts button[aria-pressed="true"]::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:var(--amber)}
 #keys{gap:6px 14px}
 #keys button{text-transform:none}
+.sub{font-size:.8rem;color:var(--mute);margin-bottom:-8px}
 .hint{font-size:.88rem;color:var(--mute);margin:0;max-width:56ch}
 
 .scale{display:flex;flex-wrap:wrap;gap:4px 14px;min-height:1.5em}
@@ -125,8 +126,11 @@ details .inner h3{font-weight:400;font-size:.85rem;color:var(--mute);margin:8px 
   </section>
 
   <section>
-    <h2>raga</h2>
+    <h2>scale</h2>
+    <div class="sub">raga</div>
     <div class="opts" id="ragas"></div>
+    <div class="sub">modes</div>
+    <div class="opts" id="modes"></div>
     <div class="scale" id="scale"></div>
     <p class="hint" id="ragaInfo"></p>
   </section>
@@ -187,6 +191,22 @@ details .inner h3{font-weight:400;font-size:.85rem;color:var(--mute);margin:8px 
 (()=>{
 const IT=["C","C♯","D","E♭","E","F","F♯","G","A♭","A","B♭","B"];
 const EN=["C","C#","D","Eb","E","F","F#","G","Ab","A","Bb","B"];
+const MODES=[
+  {n:"ionian",f:0,s:[0,2,4,5,7,9,11],i:"The major scale. Bright and settled. In Indian terms, Bilawal thaat."},
+  {n:"dorian",f:0,s:[0,2,3,5,7,9,10],i:"Minor with a raised 6th. Cool and open, the jazz and folk minor. Close to Kafi."},
+  {n:"phrygian",f:0,s:[0,1,3,5,7,8,10],i:"Minor with a flat 2nd. Dark, Spanish, Middle Eastern. Same notes as Bhairavi."},
+  {n:"lydian",f:0,s:[0,2,4,6,7,9,11],i:"Major with a raised 4th. Floating and luminous. The notes of Yaman."},
+  {n:"mixolydian",f:0,s:[0,2,4,5,7,9,10],i:"Major with a flat 7th. Bluesy, rock, folk. Khamaj thaat."},
+  {n:"aeolian",f:0,s:[0,2,3,5,7,8,10],i:"The natural minor. Sad and grounded. Asavari thaat."},
+  {n:"locrian",f:1,s:[0,1,3,5,6,8,10],i:"Flat 2nd and flat 5th. Unstable and tense: no fifth, so the tambura goes to Ma."},
+  {n:"harmonic minor",f:0,s:[0,2,3,5,7,8,11],i:"Natural minor with a raised 7th. Dramatic, with the wide step between 6th and 7th."},
+  {n:"melodic minor",f:0,s:[0,2,3,5,7,9,11],i:"Minor below, major above. The jazz minor."},
+  {n:"major pentatonic",f:0,s:[0,2,4,7,9],i:"Five notes, no half steps. Hard to play a wrong note. Same as Bhupali."},
+  {n:"minor pentatonic",f:0,s:[0,3,5,7,10],i:"Five notes, the backbone of blues and rock bass lines."},
+  {n:"blues",f:0,s:[0,3,5,6,7,10],i:"Minor pentatonic plus the flat 5th, the blue note."}
+];
+const DEG=(x,sc)=>x===6&&!sc.includes(7)?"♭5":["1","♭2","2","♭3","3","4","♯4","5","♭6","6","♭7","7"][x];
+const curScale=()=>S.raga>=100?MODES[S.raga-100]||null:S.raga>=0?RAGAS[S.raga]||null:null;
 const DV=["सा","रे॒","रे","ग॒","ग","म","म॑","प","ध॒","ध","नि॒","नि"];
 const SG=["Sa","re","Re","ga","Ga","ma","Ma′","Pa","dha","Dha","ni","Ni"];
 const FIRST=[{k:"pa",r:3/4,d:"fifth"},{k:"ma",r:2/3,d:"fourth"},{k:"ni",r:15/16,d:"seventh"},{k:"sa",r:1/2,d:"octave"}];
@@ -230,6 +250,7 @@ mkSeg($("keys"),IT,n=>n.replace("♯","♯").replace("♭","♭"),i=>S.key=i);
 mkSeg($("oct"),OCT,o=>o.n,i=>S.oct=OCT[i].k);
 mkSeg($("first"),FIRST,f=>`${f.k}<small>${f.d}</small>`,i=>S.first=i);
 mkSeg($("ragas"),RAGAS,r=>r.n,i=>{S.raga=i===RAGAS.length-1?-1:i;if(RAGAS[i].f>=0)S.first=RAGAS[i].f});
+mkSeg($("modes"),MODES,m=>m.n,i=>{S.raga=100+i;S.first=MODES[i].f});
 mkSeg($("shrMode"),SHRM,m=>`${m.n}<small>${m.d}</small>`,i=>S.shrm=i);
 mkSeg($("tala"),TALAS,t=>t?`${t.n}<small>${t.b.split(" ").length}</small>`:"off",i=>{S.tala=i;talaReset()},true);
 mkSeg($("tsnd"),TSND,m=>`${m.n}<small>${m.d}</small>`,i=>S.tsnd=i,true);
@@ -259,19 +280,19 @@ function sync(){
   const press=(id,fn)=>[...$(id).children].forEach((b,i)=>b.setAttribute("aria-pressed",fn(i)));
   press("keys",i=>i===S.key);press("oct",i=>OCT[i].k===S.oct);press("first",i=>i===S.first);
   press("timer",i=>TIMER[i]===S.tmin);press("tala",i=>i===S.tala);press("tsnd",i=>i===S.tsnd);drawBeats();press("shrMode",i=>i===S.shrm);
-  press("ragas",i=>S.raga===-1?i===RAGAS.length-1:i===S.raga);
+  press("ragas",i=>S.raga===-1?i===RAGAS.length-1:i===S.raga);press("modes",i=>S.raga===100+i);
   for(const k in sliders)$(vId[k]).textContent=sliders[k](S[k]);
   const f=freqs(),lab=tuneLab();
   $("strNames").innerHTML=f.map((x,i)=>`<div><span class="sg">${lab[i]}</span><span class="nt">${noteName(x)}</span><span class="hz">${x.toFixed(1)} Hz</span></div>`).join("");
   $("saNow").textContent=IT[S.key];
   const T=TALAS[S.tala];$("nowA").textContent="sa "+noteName(saFreq());
-  $("nowB").textContent=(S.raga>=0?RAGAS[S.raga].n:FIRST[S.first].k+" and sa")+(T?", "+T.n+" at "+S.bpm:"");
+  $("nowB").textContent=(curScale()?curScale().n:FIRST[S.first].k+" and sa")+(T?", "+T.n+" at "+S.bpm:"");
   timerLabel();fills();
   [0,1,2,3].forEach(i=>{$("tl"+i).textContent=`${i+1}  ${lab[i].toLowerCase()}`;$("tv"+i).textContent=fmtC(S.tune[i])});
-  const R=S.raga>=0?RAGAS[S.raga]:null;
-  if(R){$("scale").innerHTML=R.s.map(x=>`<div class="${x?"":"sa"}"><span class="dv">${DV[x]}</span><span class="lt">${SG[x]}</span><span class="it">${IT[(S.key+x)%12]}</span></div>`).join("");
-    $("ragaInfo").textContent=R.i+(FIRST[R.f].k!==FIRST[S.first].k?" (You changed the first string from the raga’s default.)":"")}
-  else{$("scale").innerHTML="";$("ragaInfo").textContent=RAGAS[RAGAS.length-1].i}
+  const R=curScale(),W=S.raga>=100;
+  if(R){$("scale").innerHTML=R.s.map(x=>`<div class="${x?"":"sa"}"><span class="dv">${DV[x]}</span><span class="lt">${W?DEG(x,R.s):SG[x]}</span><span class="it">${IT[(S.key+x)%12]}</span></div>`).join("");
+    $("ragaInfo").textContent=R.i+(FIRST[R.f].k!==FIRST[S.first].k?(W?" (You changed the first string from the default for this scale.)":" (You changed the first string from the raga’s default.)"):"")}
+  else{$("scale").innerHTML="";$("ragaInfo").textContent="No scale: choose the first string yourself."}
   save();
 }
 
@@ -519,7 +540,7 @@ async function start(){
   nextT=ctx.currentTime+0.08;beatIdx=0;nextBeat=ctx.currentTime+0.1;tick();clearInterval(timer);timer=setInterval(tick,250);liveUpdate();
   armTimer();
   if("mediaSession" in navigator){try{
-    navigator.mediaSession.metadata=new MediaMetadata({title:"sempre",artist:"Sa "+noteName(saFreq()).split(" · ")[0]+(S.raga>=0?" · "+RAGAS[S.raga].n:"")});
+    navigator.mediaSession.metadata=new MediaMetadata({title:"sempre",artist:"Sa "+noteName(saFreq()).split(" · ")[0]+(curScale()?" · "+curScale().n:"")});
     navigator.mediaSession.setActionHandler("play",()=>{if(!playing)start()});
     navigator.mediaSession.setActionHandler("pause",()=>stop());
     navigator.mediaSession.setActionHandler("stop",()=>stop());
