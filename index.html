@@ -540,7 +540,7 @@ function guideBuf(x){
 }
 $("scale").addEventListener("click",async e=>{
   const b=e.target.closest("button[data-x]");if(!b)return;
-  initAudio();if(ctx.state!=="running")await ctx.resume();if(!playing)levels(G,ctx);
+  if(!await wakeCtx())return;if(!playing)levels(G,ctx);
   const src=ctx.createBufferSource();src.buffer=guideBuf(+b.dataset.x);
   const g=ctx.createGain();g.gain.value=0.75;src.connect(g);g.connect(G.dry);g.connect(G.wet);if(RES)g.connect(RES.inp);
   src.start(ctx.currentTime+0.01);
@@ -590,8 +590,27 @@ function trimAhead(){
 }
 document.addEventListener("visibilitychange",()=>{
   if(!playing||!ctx)return;
-  if(document.hidden)tick();else{trimAhead();tick();timerTick()}
+  if(document.hidden)tick();else if(ctx.state!=="running")onReturn();else{trimAhead();tick();timerTick()}
 });
+
+// ---------- waking the audio after a screen lock ----------
+// phones can leave the audio context stuck after the screen goes off: resume() never answers and play stays dead until a reload.
+// So we try to resume for a moment, and if it doesn't come back we throw the context away and build a fresh one.
+const resumeSoon=(c,ms)=>Promise.race([c.resume().then(()=>true,()=>false),new Promise(r=>setTimeout(()=>r(false),ms))]);
+async function wakeCtx(){
+  initAudio();if(ctx.state==="running")return true;
+  if(ctx.state!=="closed"&&await resumeSoon(ctx,400)&&ctx.state==="running")return true;
+  sched.forEach(e=>{try{e.src.stop()}catch(x){}});sched.length=0;visQ.length=0;tVisQ.length=0;SH=null;
+  for(const k in guideCache)delete guideCache[k];
+  const old=ctx;ctx=null;G=null;RES=null;old.close().catch(()=>{});initAudio();
+  await resumeSoon(ctx,800);return ctx.state==="running";
+}
+async function onReturn(){
+  if(document.hidden||!playing||!ctx||ctx.state==="running")return;
+  if(await resumeSoon(ctx,400)&&ctx.state==="running"){trimAhead();tick();return}
+  stop(); // stuck: show play again, one tap rebuilds the sound
+}
+window.addEventListener("pageshow",onReturn);window.addEventListener("focus",onReturn);
 
 async function start(){
   initAudio();playing=true;
@@ -599,7 +618,7 @@ async function start(){
   try{if(navigator.audioSession)navigator.audioSession.type="playback"}catch(e){}
   // a silent media element keeps the audio session and lock-screen controls alive on phones
   au.src=silent;au.loop=true;au.volume=0.01;au.play().catch(()=>{});
-  if(ctx.state!=="running")await ctx.resume();levels(G,ctx);
+  if(!await wakeCtx()){stop();return}levels(G,ctx);
   nextT=ctx.currentTime+0.08;beatIdx=0;nextBeat=ctx.currentTime+0.1;tick();clearInterval(timer);timer=setInterval(tick,250);liveUpdate();
   armTimer();
   if("mediaSession" in navigator){try{
@@ -620,7 +639,7 @@ function stop(){
     setTimeout(()=>{if(!playing){ctx.suspend();levels(G,ctx,true)}},3000)}
 }
 $("play").onclick=()=>playing?stop():start();
-$("once").onclick=async()=>{initAudio();if(ctx.state!=="running")await ctx.resume();levels(G,ctx);cycleAt(ctx,G,bufs,ctx.currentTime+0.05,true)};
+$("once").onclick=async()=>{if(!await wakeCtx())return;levels(G,ctx);cycleAt(ctx,G,bufs,ctx.currentTime+0.05,true)};
 
 // ---------- timer: the fade is written on the audio clock, so it happens even with the page asleep ----------
 let deadline=0,tInt=null;const FADE=30;
